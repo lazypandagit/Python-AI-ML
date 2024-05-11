@@ -1,17 +1,21 @@
 import smtplib
 from email.message import EmailMessage as Email
-# importing os module for environment variables
-import os
-# importing necessary functions from dotenv library
-from dotenv import load_dotenv
+from dotenv import dotenv_values
+
+
+####steps to add env variables
+# pip install "python-dotenv[cli]"
+# $ dotenv set USER foo
+# $ dotenv set EMAIL foo@example.org
+# dotenv list
+# from: https://pypi.org/project/python-dotenv/#getting-started
+######
+
 # loading variables from .env file
-load_dotenv() 
- 
+config = dotenv_values(".env")
 
 
-def sendEmail(to: str,
-              subject: str,
-              body: str) -> None:
+def sendEmail(to: str, subject: str, body: str) -> None:
     # Docstrics for intelliSense
 
     """Sends Email to an mail address
@@ -24,7 +28,11 @@ def sendEmail(to: str,
 
     # Username and Password of the sender
     user: str = "ani1010200@gmail.com"
-    password: str = os.getenv('EMAIL_APP_PASSWORD')
+    password: str | None = config["EMAIL_APP_PASSWORD"]
+
+    if password == None:
+        print("Password not found in .env file \n Add Password")
+        return None
 
     # Constructing the email
     emailMsg = Email()
