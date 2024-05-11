@@ -1,8 +1,17 @@
 import smtplib
 from email.message import EmailMessage as Email
+# importing os module for environment variables
+import os
+# importing necessary functions from dotenv library
+from dotenv import load_dotenv
+# loading variables from .env file
+load_dotenv() 
+ 
 
 
-def sendEmail(to: str, subject: str, body: str) -> None:
+def sendEmail(to: str,
+              subject: str,
+              body: str) -> None:
     # Docstrics for intelliSense
 
     """Sends Email to an mail address
@@ -15,7 +24,7 @@ def sendEmail(to: str, subject: str, body: str) -> None:
 
     # Username and Password of the sender
     user: str = "ani1010200@gmail.com"
-    password: str = "vbhjchmbjmiojmnc"
+    password: str = os.getenv('EMAIL_APP_PASSWORD')
 
     # Constructing the email
     emailMsg = Email()
@@ -30,9 +39,9 @@ def sendEmail(to: str, subject: str, body: str) -> None:
     server.login(user, password)
     server.send_message(emailMsg)
     server.quit()
-    print("Email sent")
+    print(f"Email sent to {to}")
 
 
 if __name__ == "__main__":
-    senderEMAIL: str = input("Enter sender's E-mail address: ")
-    sendEmail(senderEMAIL, "Test email", "This is a test email \n Hello world")
+    recipientEMAIL: str = input("Enter recipient's E-mail address: ")
+    sendEmail(recipientEMAIL, "Test email", "This is a test email \n Hello world")
