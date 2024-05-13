@@ -3,7 +3,6 @@ from encrypt import generateOTP as otp
 from email.message import EmailMessage as Email
 from dotenv import dotenv_values
 
-
 ####steps to add env variables
 # pip install "python-dotenv[cli]"
 # $ dotenv set USER foo
@@ -31,24 +30,24 @@ def sendEmail(to: str, subject: str, body: str) -> None:
     user: str = input("Enter Sender's Email address: ")
     password: str | None = config["EMAIL_APP_PASSWORD"]
 
-    if password == None:
-        print("Password not found in .env file \n Add Password")
+    if password != None:
+        # Constructing the email
+        emailMsg = Email()
+        emailMsg["from"] = user
+        emailMsg["to"] = to
+        emailMsg["subject"] = subject
+        emailMsg.set_content(body)
+
+        # SMTP Server setup
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+        # server.starttls() #Only need for .SMTP:port 586
+        server.login(user, password)
+        server.send_message(emailMsg)
+        server.quit()
+        print(f"Email sent to {to}")
+    else:
+        print("Password not found in .env file \n Add Password to env file")
         return None
-
-    # Constructing the email
-    emailMsg = Email()
-    emailMsg["from"] = user
-    emailMsg["to"] = to
-    emailMsg["subject"] = subject
-    emailMsg.set_content(body)
-
-    # SMTP Server setup
-    server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-    # server.starttls()
-    server.login(user, password)
-    server.send_message(emailMsg)
-    server.quit()
-    print(f"Email sent to {to}")
 
 
 if __name__ == "__main__":

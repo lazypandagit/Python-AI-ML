@@ -5,7 +5,7 @@ import string
 st1 = string.ascii_letters + string.digits + "@#$%_-"
 loop = 0
 
-os.system("cls")
+
 while True:
     upper = 0
     lower = 0
@@ -27,4 +27,7 @@ while True:
     if upper >= 1 and lower >= 1 and digit >= 3 and symbol >= 2:
         break
 
-print(f"password is {password} and took {loop} loops")
+
+if __name__ == "__main__":
+    os.system("cls")
+    print(f"password is {password} and took {loop} loops")
