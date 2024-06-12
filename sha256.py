@@ -94,7 +94,6 @@ def b2hexa(binary: str) -> str:
             h = chr(temp + 55) + h
             # hexa.insert(0, chr(temp + 55))
         decimal = int(decimal / 16)
-    print(f"binary2hexa = {h}\t{len(h)}", file=log_file)
     return h
 
 
@@ -123,33 +122,22 @@ def f2b(frac: float, k_prec: int = 32) -> str:
             binary += "0"
 
         k_prec -= 1
-    print(f"fraction2binary = {binary}\t{len(binary)}", file=log_file)
     return binary
 
 
 def d2b(num: int, l: int = 32) -> str:
     """Decimal to Binary
-
     Args:
         num (int): number to be converted
-
     Returns:
         str: Binary in string format
     """
-    original = num
-    binary: list[int] = []
+
     binstr: str = ""
     while num >= 1:
-        binary.insert(0, num % 2)
+        binstr = str(num % 2) + binstr
         num = int(num / 2)
-    for i in binary:
-        binstr += str(i)
-
-    binstr = binstr.rjust(l, "0")
-
-    # return binary
-    print(f"d2b({original}) = {binstr}\t{len(binstr)}", file=log_file)
-    return binstr
+    return binstr.rjust(l, "0")
 
 
 def rotr(bit: str, n: int) -> str:
@@ -164,7 +152,6 @@ def rotr(bit: str, n: int) -> str:
     """
     res = ""
     if n == 32:
-        print(bit)
         return bit
     elif n < 32:
         bitlist = list(bit)
@@ -179,7 +166,6 @@ def rotr(bit: str, n: int) -> str:
             bitlist.pop()
     for b in bitlist:
         res += b
-    print(f"rightrot. by {n} = {bit} -> {res}\t{len(res)}", file=log_file)
     return res
 
 
@@ -193,14 +179,12 @@ def xor(bit1: str, bit2: str) -> str:
             result = result + "0"
         else:
             result = result + "1"
-    print(f"xor -\n{bit1}\n{bit2}\n----\n{result}\t{len(result)}", file=log_file)
     return result
 
 
 def shiftR(bit: str, n: int) -> str:
     shifted = bit[0 : (len(bit) - n)]
     s = shifted.rjust(len(bit), "0")
-    print(f"shiftR of \n{bit} by {n} bits\n---\n{s}\t{len(s)}", file=log_file)
     return s
 
 
@@ -212,30 +196,26 @@ def b2d(binarystr: str) -> int:
         decimal += pow(2, i) * base
         i += 1
         binarystr = binarystr[:-1]
-    print(f"binary2deci = {decimal}", file=log_file)
     return decimal
 
 
-def addition(n1: str, n2: str) -> str:
-    dn1 = b2d(n1)
-    dn2 = b2d(n2)
-    result = (dn1 + dn2) % 2**32
-    addi = d2b(result).rjust(len(n1), "0")
-    print(f"\naddition --\n{n1}\n{n2}\n-----\n{addi}\t{len(addi)}", file=log_file)
-    return addi
+def addition(*args: str) -> str:
+    d = 0
+    for i in args:
+        d += b2d(i)
+    binary = d2b(d % 2**32)
+    return binary
 
 
 def sigma0(bit: str) -> str:
     temp: str = xor(rotr(bit, 7), rotr(bit, 18))
     res: str = xor(temp, shiftR(bit, 3))
-    print(f"sig0 = {res}\t{len(res)}", file=log_file)
     return res
 
 
 def sigma1(bit: str) -> str:
     temp: str = xor(rotr(bit, 17), rotr(bit, 19))
     res: str = xor(temp, shiftR(bit, 10))
-    print(f"sig1 = {res}\t{len(res)}", file=log_file)
     return res
 
 
@@ -245,7 +225,6 @@ def capsig0(bits: str) -> str:
     rot3 = rotr(bits, 13)
     temp = xor(rot1, rot2)
     result = xor(temp, rot3)
-    print(f"csig0 = {result}\t{len(result)}", file=log_file)
     return result
 
 
@@ -255,7 +234,6 @@ def capsig1(bits: str) -> str:
     rot3 = rotr(bits, 22)
     temp = xor(rot1, rot2)
     result = xor(temp, rot3)
-    print(f"csig1 = {result}\t{len(result)}", file=log_file)
     return result
 
 
@@ -266,7 +244,6 @@ def choice(x: str, y: str, z: str) -> str:
             result += y[i]
         elif x[i] == "0":
             result += z[i]
-    print(f"choice b/w\n{x}\n{y}\n{z}\n-----\n{result}\t{len(result)}", file=log_file)
     return result
 
 
@@ -280,35 +257,34 @@ def majority(x: str, y: str, z: str) -> str:
             maj += "1"
         else:
             maj += "0"
-    print(f"majority b/w\n{x}\n{y}\n{z}\n----\n{maj}\t{len(maj)}", file=log_file)
     return maj
 
 
 def msgshd(block: str) -> list[str]:
     msw: list[str] = []
+
     # dividing the msg block into schedules
     for i in range(16):
         msw.append(block[32 * i : (32 * (i + 1))])
+
     # adding rest of the message schedules up-to 64
     for t in range(16, 64):
-        temp1 = addition(msw[t - 16], sigma0(msw[t - 15]))
-        temp2 = addition(temp1, msw[t - 7])
-        temp3 = addition(temp2, sigma1(msw[t - 2]))
-        msw.append(temp3)
-    for i in range(len(msw)):
-        print(f"msg schedule {i} = {msw[i]}", file=log_file)
+        temp: str = addition(
+            msw[t - 16], sigma0(msw[t - 15]), msw[t - 7], sigma1(msw[t - 2])
+        )
+        msw.append(temp)
     return msw
 
 
 def temp1(k: str, w: str, initial_hash: list[str]) -> str:
-    add1 = addition(
+    ad = addition(
         capsig1(initial_hash[5]),
         choice(initial_hash[4], initial_hash[5], initial_hash[6]),
+        initial_hash[7],
+        k,
+        w,
     )
-    add2 = addition(initial_hash[7], k)
-    add3 = addition(add1, add2)
-    add4 = addition(add3, w)
-    return add4
+    return ad
 
 
 def temp2(hv: list[str]) -> str:
@@ -320,13 +296,12 @@ def temp2(hv: list[str]) -> str:
 
 
 def hash(s: str) -> str:
-    print(f"string = {s}", file=log_file)
     hdigest = ""
     initial_hash = list(HASH_CONSTANTS)
+    bxmsg: str = ""
+
     # convert to ascii ord()
     o: list[int] = [ord(x) for x in s]
-    print(f"ord = {o}", file=log_file)
-    bxmsg: str = ""
 
     # convert to binary and concatenate
     for i in o:
@@ -348,8 +323,6 @@ def hash(s: str) -> str:
     # padding to n message blocks of 512 bit length
     paddedmsg: str = bxmsg.ljust(512 * n - 64, "0") + msglen
 
-    print(f"msg = {paddedmsg}\t{len(paddedmsg)}", file=log_file)
-
     # creating required message blocks
     msgblocks: list[str] = []
     for i in range(n):
@@ -359,9 +332,8 @@ def hash(s: str) -> str:
     for block in msgblocks:
         msgschedule = msgshd(block)
 
-        # calculating temporary values
+        # calculating temporary values for each block
         for i in range(len(msgschedule)):
-            print(f"msgsch ={msgschedule[i]}\t{len(msgschedule[i])}", file=log_file)
             k: str = K_CONSTANTS[i]
             w: str = msgschedule[i]
             t1 = temp1(k, w, initial_hash)
@@ -374,7 +346,7 @@ def hash(s: str) -> str:
             b = addition(initial_hash[4], t1)
             initial_hash[4] = b
 
-        # adding initial hash values into initial_hash
+        # adding HASH_CONSTANTS into initial_hash
         for i in range(len(HASH_CONSTANTS)):
             initial_hash[i] = addition(initial_hash[i], HASH_CONSTANTS[i])
     for d in initial_hash:
@@ -386,15 +358,9 @@ def hash(s: str) -> str:
 
 
 if __name__ == "__main__":
-    ########################################
-    log_file = open("log.txt", "w")
-    ######################################
-    h = hash("abc")  # BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD
+    h = hash("RedBlockBlue")
     print(
         h,
         len(h),
+        len("F8F05F79FE0C0F876D26368BD12C08EF31617039AE3104C34F22DB9C0AFD3BD9"),
     )
-    ######################################
-    log_file.close()
-    ######################################
-# pass
