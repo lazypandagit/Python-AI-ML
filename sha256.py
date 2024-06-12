@@ -81,18 +81,42 @@ HASH_CONSTANTS: list[str] = [
 ]
 
 
+def b2d(binarystr: str) -> int:
+    """Binary to Decimal converter
+
+    Args:
+        binarystr (str): Input Binary
+
+    Returns:
+        int: Decimal
+    """
+    decimal = 0
+    i = 0
+    while len(binarystr) >= 1:
+        base = int(binarystr[-1])
+        decimal += pow(2, i) * base
+        i += 1
+        binarystr = binarystr[:-1]
+    return decimal
+
+
 def b2hexa(binary: str) -> str:
+    """Binary to Hexa-Decimal convertor
+
+    Args:
+        binary (str): Binary input
+
+    Returns:
+        str: Hexa-decimal
+    """
     decimal = b2d(binary)
     h = ""
-    # hexa: list[str] = []
     while decimal != 0:
         temp = decimal % 16
         if temp < 10:
             h = str(temp) + h
-            # hexa.insert(0, str(temp))
         else:
             h = chr(temp + 55) + h
-            # hexa.insert(0, chr(temp + 55))
         decimal = int(decimal / 16)
     return h
 
@@ -170,8 +194,20 @@ def rotr(bit: str, n: int) -> str:
 
 
 def xor(bit1: str, bit2: str) -> str:
+    """bitwise Xor of 2 binary numbers
+
+    Args:
+        bit1 (str): Binary number 1
+        bit2 (str): Binary number 2
+
+    Returns:
+        str: Xor'd binary
+    """
     result = ""
+
+    # if both numbers are not of same length
     if len(bit1) != len(bit2):
+        # makes them of equal lenght
         min(bit1, bit2, key=len).rjust(len(max(bit1, bit2, key=len)), "0")
 
     for bit in range(len(bit1)):
@@ -183,43 +219,55 @@ def xor(bit1: str, bit2: str) -> str:
 
 
 def shiftR(bit: str, n: int) -> str:
+    """Right shifts the given binary number by n bits
+
+    Args:
+        bit (str): bit to be shifted
+        n (int): number of place to be shifted
+
+    Returns:
+        str: shifted binary
+    """
     shifted = bit[0 : (len(bit) - n)]
     s = shifted.rjust(len(bit), "0")
     return s
 
 
-def b2d(binarystr: str) -> int:
-    decimal = 0
-    i = 0
-    while len(binarystr) >= 1:
-        base = int(binarystr[-1])
-        decimal += pow(2, i) * base
-        i += 1
-        binarystr = binarystr[:-1]
-    return decimal
-
-
 def addition(*args: str) -> str:
+    """Adds Binary numbers and returns the binary of 32 bit length
+
+    Returns:
+        str: _description_
+    """
     d = 0
     for i in args:
         d += b2d(i)
     binary = d2b(d % 2**32)
-    return binary
+    return binary.rjust(32, "0")
 
 
 def sigma0(bit: str) -> str:
+    """Performs the σ0 operation
+    xor(rotation(7), rotation(18), shiftR(3))
+    """
     temp: str = xor(rotr(bit, 7), rotr(bit, 18))
     res: str = xor(temp, shiftR(bit, 3))
     return res
 
 
 def sigma1(bit: str) -> str:
+    """Performs the σ1 operation
+    xor(rotation(17), rotation(18), shiftR(10))
+    """
     temp: str = xor(rotr(bit, 17), rotr(bit, 19))
     res: str = xor(temp, shiftR(bit, 10))
     return res
 
 
 def capsig0(bits: str) -> str:
+    """Performs the Σ0 operation
+    xor(rotation(7), rotation(22), rotation(13))
+    """
     rot1 = rotr(bits, 7)
     rot2 = rotr(bits, 22)
     rot3 = rotr(bits, 13)
@@ -229,6 +277,9 @@ def capsig0(bits: str) -> str:
 
 
 def capsig1(bits: str) -> str:
+    """Performs the Σ1 operation
+    xor(rotation(6), rotation(11), rotation(22))
+    """
     rot1 = rotr(bits, 6)
     rot2 = rotr(bits, 11)
     rot3 = rotr(bits, 22)
@@ -238,6 +289,9 @@ def capsig1(bits: str) -> str:
 
 
 def choice(x: str, y: str, z: str) -> str:
+    """bitwise chooses the y bit if x bit == 1
+    else chooses the z bit if x bit == 0
+    """
     result: str = ""
     for i in range(len(x)):
         if x[i] == "1":
@@ -248,6 +302,9 @@ def choice(x: str, y: str, z: str) -> str:
 
 
 def majority(x: str, y: str, z: str) -> str:
+    """
+    Chooses bits based on majority from 3 numbers bit wise
+    """
     maj: str = ""
     for i in range(len(x)):
         l = list(x[i] + y[i] + z[i])
@@ -261,6 +318,9 @@ def majority(x: str, y: str, z: str) -> str:
 
 
 def msgshd(block: str) -> list[str]:
+    """
+    Prepares the message schedule for each message block
+    """
     msw: list[str] = []
 
     # dividing the msg block into schedules
@@ -296,6 +356,7 @@ def temp2(hv: list[str]) -> str:
 
 
 def hash(s: str) -> str:
+    """Main hash function.Takes a string and return the hash digest"""
     hdigest = ""
     initial_hash = list(HASH_CONSTANTS)
     bxmsg: str = ""
@@ -354,13 +415,10 @@ def hash(s: str) -> str:
     return hdigest
 
 
-# FIXME: Wrong msg schedule generating
+# FIXME: Wrong msg schedule generating (due to wrong addition)
+# TODO:Fix the addition function
 
 
 if __name__ == "__main__":
-    h = hash("RedBlockBlue")
-    print(
-        h,
-        len(h),
-        len("F8F05F79FE0C0F876D26368BD12C08EF31617039AE3104C34F22DB9C0AFD3BD9"),
-    )
+    h = hash("Hello World")
+    print(f"Test hash\nhash of 'Hello World' is {h}")
