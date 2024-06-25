@@ -1,25 +1,38 @@
 ##important imports
-import os
-import pickle
 from pathlib import Path
+import pickle
+import os
 
 ## importing for type annotations
-from io import BufferedWriter
+from io import BufferedReader, BufferedWriter
 
 ##File name Constants
 MAIN_FILE_NAME = "Records.dat"
 TEMP_FILE_NAME = "Temp_Records.dat"
 
-
+## For clearing the terminal
 def clear() -> None:
     os.system("cls")
+## Delaying while loop
+def stop()-> None:
+    input("Press Enter to continue")
 
+## Closing Files    
+def fileClose(file1: BufferedReader, file2: BufferedWriter) -> None:
+    file1.close()
+    file2.close()
 
+## Replacing File
+def replaceFile(file1: str, file2: str) -> None:
+    Path.unlink(Path(file1))
+    Path.rename(Path(file2), file1)
+
+# Formating Records
 def printRecord(record: dict[str, int | str | list[str]]) -> None:
     for key, value in record.items():
         print(f"{key} => {value}")
 
-
+# Insert Data
 def insert(file: BufferedWriter) -> None:
     clear()
     aadhar: int = getAadhar()
@@ -35,7 +48,7 @@ def insert(file: BufferedWriter) -> None:
     pickle.dump(record, file)
     print("__Data Recorded__")
 
-
+# Displaying record
 def display() -> None:
     clear()
     with open(MAIN_FILE_NAME, "rb") as file:
@@ -54,76 +67,120 @@ def display() -> None:
                 break
     # input("Press Enter to continue")
 
+def findAndCopy(file1: BufferedReader, file2: BufferedWriter, aadhar: int)-> dict[str, int|str|list[str]] | None:
+    updateRecord = {}
+    try:
+        while True:
+            vaccineData: dict[str, int | str | list[str]] = pickle.load(file1)
+            if vaccineData["Aadhar Number"] != aadhar:
+                pickle.dump(vaccineData, file2)
+            else:
+                updateRecord = vaccineData
+    except:
+        pass
+    return None if updateRecord == {} else updateRecord
 
+
+#updating records
 def update() -> None:
     clear()
-    with open(MAIN_FILE_NAME, "rb") as mainfile, open(TEMP_FILE_NAME, "wb") as tempfile:
-        aadhar: int = getAadhar("Enter Aadhar number to search by: ")
-        recordUpdated = False
+    #getting aadhar number to search
+    aadhar: int = getAadhar("Enter Aadhar number to search by: ")
+    updates:int = 0
+    try:
         while True:
-            vaccineData: dict[str, int | str | list[str]] = pickle.load(mainfile)
-            if vaccineData["Aadhar Number"] != aadhar:
-                pickle.dump(vaccineData, tempfile)
+            #opening files
+            mainfile = open(MAIN_FILE_NAME, "rb")
+            tempfile = open(TEMP_FILE_NAME, "ab")
+            data: dict[str, int|str|list[str]] | None = findAndCopy(mainfile, tempfile, aadhar)
+            if data == None:
+                print("No record found\nExiting programme")
             else:
+                # if record found
+                currentUpdate = 0
                 print("Record Found:")
-                printRecord(vaccineData)
+                printRecord(data)
                 c = input(
-                    "Select Field to update:\n(1) Name\n(2) Age\n(3) Vaccine Type\nOption: "
+                    "Select Field to update:\n(1) Name\n(2) Age\n(3) Vaccine Type\n(4) Quit\nOption: "
                 )
+                clear()
                 if c == "1":
+                    #updating name
                     name: str = input("Enter New Name: ")
-                    vaccineData["Name"] = name
-                    print("imput done")
-                    pickle.dump(vaccineData, tempfile)
-                    recordUpdated = not recordUpdated
+                    data["Name"] = name
+                    print("'Name'parameter updated")
+                    pickle.dump(data, tempfile)
+                    updates += 1
+                    currentUpdate += 1
+                    fileClose(mainfile, tempfile)
+                    replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                    stop()
                 elif c == "2":
+                    #updating age
                     age: int = getAge("Enter new age: ")
-                    vaccineData["Age"] = age
-                    pickle.dump(vaccineData, tempfile)
-                    recordUpdated = not recordUpdated
+                    print("'Age'parameter updated")
+                    data["Age"] = age
+                    pickle.dump(data, tempfile)
+                    updates += 1
+                    currentUpdate += 1
+                    fileClose(mainfile, tempfile)
+                    replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                    stop()
                 elif c == "3":
-                    vaccineData["Vaccine Type"] = getVaccineTypes(
-                        "Enter Updated Vaccines"
+                    #updating vaccines
+                    data["Vaccine Type"] = getVaccineTypes(
+                        "Enter Updated Vaccines: "
                     )
-                    pickle.dump(vaccineData, tempfile)
-                    recordUpdated = not recordUpdated
+                    print("'Vaccine'parameter updated")
+                    pickle.dump(data, tempfile)
+                    updates += 1
+                    currentUpdate += 1
+                    fileClose(mainfile, tempfile)
+                    replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                    stop()
+                elif c == "4":
+                    # quiting update
+                    if updates == 0:
+                        #quitting without updating anything
+                        print("No record was updated")
+                        fileClose(mainfile, tempfile)
+                        stop()
+                        break
+                    else:
+                        if currentUpdate == 0:
+                            print(f"{updates} {"parameters" if updates > 1 else "parameter"} {"were" if updates > 1 else "was"} updated!!")
+                            fileClose(mainfile, tempfile)
+                            stop()
+                            break
+                        else:
+                            print(f"{updates} {"parameters" if updates > 1 else "parameter"} {"were" if updates > 1 else "was" } updated")
+                            fileClose(mainfile, tempfile)
+                            replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                            stop()
+                            break
                 else:
-                    print("Invalid Choice!!\nRecord was not updates")
-            try:
-                if recordUpdated == False:
-                    raise EOFError
-                else:
-                    Path.unlink(Path(MAIN_FILE_NAME))
-                    Path.rename(Path(TEMP_FILE_NAME), MAIN_FILE_NAME)
-            except EOFError:
-                print("No Records Found\nCheck the details and try again.")
-                break
-    input("Press Enter to continue")
+                    print("Invalid Choice!!\nRecord was not updated")
+                    stop()
+    except EOFError:
+        print("No Records Found\nCheck the details and try again.")
+        stop()
 
 
 def delete() -> None:
     clear()
     with open(MAIN_FILE_NAME, "rb") as mainfile, open(TEMP_FILE_NAME, "wb") as tempfile:
         aadhar: int = getAadhar("Enter Aadhar number of record to delete: ")
-        recordDeleted: bool = False
-        while True:
-            clear()
-            database: dict[str, int | str | list[str]] = pickle.load(mainfile)
-            if database["Aadhar Number"] != aadhar:
-                pickle.dump(database, tempfile)
+        # recordDeleted: bool = False
+        try:
+            d = findAndCopy(mainfile,tempfile, aadhar)
+            if d != None:
+                print("Record Deleted")
             else:
-                print("Record Deleted!")
-                recordDeleted = not recordDeleted
-            try:
-                if recordDeleted == True:
-                    break
-                else:
-                    raise EOFError
-            except EOFError:
-                print(
+                raise EOFError
+        except EOFError:
+            print(
                     "End of File reached\nNo Records Found\nCheck the details and try again."
                 )
-                break
     Path.unlink(Path(MAIN_FILE_NAME))
     Path.rename(Path(TEMP_FILE_NAME), MAIN_FILE_NAME)
     input("Press Enter to continue...")
@@ -195,7 +252,7 @@ def vaccineManagementMenu():
     while True:
         clear()
         choice = input(
-            "\n---Vaccine Managemment System---\n\nMenu:\n(1) Insert Record\n(2) Display Record\n(3) Update Record\n(4) Delete Record\n(q) Quit programe: "
+            "\n---Vaccine Managemment System---\n\nMenu:\n(1) Insert Record\n(2) Display Record\n(3) Update Record\n(4) Delete Record\n(q) Quit programe\nOption:  "
         )
         if choice == "1":
             with open(MAIN_FILE_NAME, "ab") as records:
@@ -215,6 +272,7 @@ def vaccineManagementMenu():
         elif choice == "4":
             delete()
         elif choice == "q" or choice == "Q":
+            clear()
             print("Exiting programe")
             break
         else:
