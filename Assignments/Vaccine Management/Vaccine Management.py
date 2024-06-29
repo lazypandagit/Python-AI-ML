@@ -364,7 +364,7 @@ def vaccineManagementMenu():
             break
         else:
             print("invalid Choice")
-            input("Press Enter to continue")
+            stop()
 
 
 if __name__ == "__main__":
