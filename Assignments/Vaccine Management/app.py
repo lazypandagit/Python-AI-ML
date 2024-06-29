@@ -10,27 +10,34 @@ from io import BufferedReader, BufferedWriter
 MAIN_FILE_NAME = "Records.dat"
 TEMP_FILE_NAME = "Temp_Records.dat"
 
+
 ## For clearing the terminal
 def clear() -> None:
     os.system("cls")
+
+
 ## Delaying while loop
-def stop()-> None:
+def stop() -> None:
     input("Press Enter to continue")
 
-## Closing Files    
+
+## Closing Files
 def fileClose(file1: BufferedReader, file2: BufferedWriter) -> None:
     file1.close()
     file2.close()
+
 
 ## Replacing File
 def replaceFile(file1: str, file2: str) -> None:
     Path.unlink(Path(file1))
     Path.rename(Path(file2), file1)
 
+
 # Formating Records
 def printRecord(record: dict[str, int | str | list[str]]) -> None:
     for key, value in record.items():
         print(f"{key} => {value}")
+
 
 # Insert Data
 def insert(file: BufferedWriter) -> None:
@@ -47,6 +54,7 @@ def insert(file: BufferedWriter) -> None:
     }
     pickle.dump(record, file)
     print("__Data Recorded__")
+
 
 # Displaying record
 def display() -> None:
@@ -67,7 +75,10 @@ def display() -> None:
                 break
     # input("Press Enter to continue")
 
-def findAndCopy(file1: BufferedReader, file2: BufferedWriter, aadhar: int)-> dict[str, int|str|list[str]] | None:
+
+def findAndCopy(
+    file1: BufferedReader, file2: BufferedWriter, aadhar: int
+) -> dict[str, int | str | list[str]] | None:
     updateRecord = {}
     try:
         while True:
@@ -81,20 +92,23 @@ def findAndCopy(file1: BufferedReader, file2: BufferedWriter, aadhar: int)-> dic
     return None if updateRecord == {} else updateRecord
 
 
-#updating records
+# updating records
 def update() -> None:
     clear()
-    #getting aadhar number to search
+    # getting aadhar number to search
     aadhar: int = getAadhar("Enter Aadhar number to search by: ")
-    updates:int = 0
+    updates: int = 0
     try:
         while True:
-            #opening files
+            # opening files
             mainfile = open(MAIN_FILE_NAME, "rb")
             tempfile = open(TEMP_FILE_NAME, "ab")
-            data: dict[str, int|str|list[str]] | None = findAndCopy(mainfile, tempfile, aadhar)
+            data: dict[str, int | str | list[str]] | None = findAndCopy(
+                mainfile, tempfile, aadhar
+            )
             if data == None:
                 print("No record found\nExiting programme")
+                break
             else:
                 # if record found
                 currentUpdate = 0
@@ -105,57 +119,75 @@ def update() -> None:
                 )
                 clear()
                 if c == "1":
-                    #updating name
+                    # updating name
                     name: str = input("Enter New Name: ")
-                    data["Name"] = name
+                    newData: dict[str, int | str | list[str]] = {
+                        "Aadhar Number": aadhar,
+                        "Name": name,
+                        "Age": data["Age"],
+                        "Vaccine type": data["Vaccine Type"],
+                    }
                     print("'Name'parameter updated")
-                    pickle.dump(data, tempfile)
+                    pickle.dump(newData, tempfile)
                     updates += 1
                     currentUpdate += 1
                     fileClose(mainfile, tempfile)
-                    replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                    replaceFile(MAIN_FILE_NAME, TEMP_FILE_NAME)
                     stop()
                 elif c == "2":
-                    #updating age
+                    # updating age
                     age: int = getAge("Enter new age: ")
                     print("'Age'parameter updated")
-                    data["Age"] = age
-                    pickle.dump(data, tempfile)
+                    newData: dict[str, int | str | list[str]] = {
+                        "Aadhar Number": aadhar,
+                        "Name": data["Name"],
+                        "Age": age,
+                        "Vaccine type": data["Vaccine Type"],
+                    }
+                    pickle.dump(newData, tempfile)
                     updates += 1
                     currentUpdate += 1
                     fileClose(mainfile, tempfile)
-                    replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                    replaceFile(MAIN_FILE_NAME, TEMP_FILE_NAME)
                     stop()
                 elif c == "3":
-                    #updating vaccines
-                    data["Vaccine Type"] = getVaccineTypes(
-                        "Enter Updated Vaccines: "
-                    )
+                    # updating vaccines
+                    newData: dict[str, int | str | list[str]] = {
+                        "Aadhar Number": aadhar,
+                        "Name": data["Name"],
+                        "Age": data["Age"],
+                        "Vaccine type": getVaccineTypes("Enter Updated Vaccines: "),
+                    }
                     print("'Vaccine'parameter updated")
-                    pickle.dump(data, tempfile)
+                    pickle.dump(newData, tempfile)
                     updates += 1
                     currentUpdate += 1
                     fileClose(mainfile, tempfile)
-                    replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                    replaceFile(MAIN_FILE_NAME, TEMP_FILE_NAME)
                     stop()
                 elif c == "4":
                     # quiting update
                     if updates == 0:
-                        #quitting without updating anything
+                        # quitting without updating anything
                         print("No record was updated")
                         fileClose(mainfile, tempfile)
+                        replaceFile(MAIN_FILE_NAME, TEMP_FILE_NAME)
                         stop()
                         break
                     else:
                         if currentUpdate == 0:
-                            print(f"{updates} {"parameters" if updates > 1 else "parameter"} {"were" if updates > 1 else "was"} updated!!")
+                            print(
+                                f"{updates} {'parameters' if updates > 1 else 'parameter'} {'were' if updates > 1 else 'was'} updated!!"
+                            )
                             fileClose(mainfile, tempfile)
                             stop()
                             break
                         else:
-                            print(f"{updates} {"parameters" if updates > 1 else "parameter"} {"were" if updates > 1 else "was" } updated")
+                            print(
+                                f"{updates} {'parameters' if updates > 1 else 'parameter'} {'were' if updates > 1 else 'was' } updated"
+                            )
                             fileClose(mainfile, tempfile)
-                            replaceFile(MAIN_FILE_NAME,TEMP_FILE_NAME)
+                            replaceFile(MAIN_FILE_NAME, TEMP_FILE_NAME)
                             stop()
                             break
                 else:
@@ -172,15 +204,15 @@ def delete() -> None:
         aadhar: int = getAadhar("Enter Aadhar number of record to delete: ")
         # recordDeleted: bool = False
         try:
-            d = findAndCopy(mainfile,tempfile, aadhar)
+            d = findAndCopy(mainfile, tempfile, aadhar)
             if d != None:
                 print("Record Deleted")
             else:
                 raise EOFError
         except EOFError:
             print(
-                    "End of File reached\nNo Records Found\nCheck the details and try again."
-                )
+                "End of File reached\nNo Records Found\nCheck the details and try again."
+            )
     Path.unlink(Path(MAIN_FILE_NAME))
     Path.rename(Path(TEMP_FILE_NAME), MAIN_FILE_NAME)
     input("Press Enter to continue...")
@@ -282,3 +314,4 @@ def vaccineManagementMenu():
 
 if __name__ == "__main__":
     vaccineManagementMenu()
+    # pdconsec.vscode-print
